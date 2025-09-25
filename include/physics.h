@@ -12,4 +12,4 @@ class physics
       virtual void primToCons(grid2D& grid) = 0;
 
       virtual ~physics(){}
-}
+};

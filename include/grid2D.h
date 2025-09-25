@@ -22,4 +22,4 @@ class grid2D
       double m_dx, m_dy;
       std::vector<std::vector<cell>> m_grid;
 
-}
+};

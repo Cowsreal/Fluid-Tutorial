@@ -7,13 +7,13 @@
 class solver2D
 {
    public: 
-      solver2D(int nx, int ny, double dx, double dy, physics& phys, timeIntegrator& int, double dt, double tStop);
+      solver2D(int nx, int ny, double dx, double dy, physics& phys, timeIntegrator& timeIntegrator, double dt, double tStop);
       void run();
       
    private:
       grid2D m_grid;
       physics& m_physics;
-      timeIntegrator* m_timeIntegrator;
+      timeIntegrator& m_timeIntegrator;
       double m_dt;
       double m_tStop;
-}
+};
