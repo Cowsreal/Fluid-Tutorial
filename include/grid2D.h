@@ -14,8 +14,8 @@ class grid2D
 
       int getNx(){return m_nx;}
       int getNy(){return m_ny;}
-      int getDx(){return m_dx;}
-      int getDy(){return m_dy;}
+      double getDx(){return m_dx;}
+      double getDy(){return m_dy;}
 
    private:
       int m_nx, m_ny;

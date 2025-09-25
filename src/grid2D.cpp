@@ -13,6 +13,5 @@ grid2D::grid2D(int nx, int ny, double dx, double dy)
 
 cell& grid2D::getCell(int i, int j)
 {
-   std::cout << m_grid.size() << " X " << m_grid[0].size() << std::endl; 
    return m_grid[i][j];
 }

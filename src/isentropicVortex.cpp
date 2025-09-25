@@ -9,16 +9,16 @@ void isentropicVortex::initialize(grid2D& grid)
    for(int i = 0; i < grid.getNx(); i++)
    {
       double x = i * grid.getDx() + grid.getDx() * 0.5;
+      std::cout << i << ", "<< grid.getDx()<< ", " << std::endl;
       for(int j = 0; j < grid.getNy(); j++)
       {
          cell& currCell = grid.getCell(i, j);
          // get cell center
-         double y = i * grid.getDy() + grid.getDy() * 0.5;
+         double y = j * grid.getDy() + grid.getDy() * 0.5;
 
          currCell.var(1) = m_vel1 - (x - m_x0) * m_epsilon / (2 * M_PI) * exp(1 - (x - m_x0) * (x - m_x0) - (y - m_y0) * (y - m_y0)); 
          currCell.var(2) = m_vel1 + (y - m_y0) * m_epsilon / (2 * M_PI) * exp(1 - (x - m_x0) * (x - m_x0) - (y - m_y0) * (y - m_y0)); 
 
-         std::cout << i << ", " << j << std::endl;
          // temperature
          double temp = 1 - (m_gamma - 1) * m_epsilon * m_epsilon / (8 * m_gamma * M_PI * M_PI);
          temp *= exp(1 - (x - m_x0) * (x - m_x0) - (y - m_y0) * (y - m_y0));
@@ -35,12 +35,12 @@ void isentropicVortex::initialize(grid2D& grid)
       {
          cell& currCell = grid.getCell(i, j);
          f << currCell.var(0);
-
-         if(i == grid.getNx() - 1)
+         if(j != grid.getNy() - 1)
          {
-            f << "\n";
+            f << ", ";
          }
       }
+      f << "\n";
    }
    f.close();
 }
