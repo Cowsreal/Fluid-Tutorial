@@ -7,7 +7,7 @@
 class solver2D
 {
    public: 
-      solver2D(int nx, int ny, double dx, double dy, physics& phys, timeIntegrator& timeIntegrator, double dt, double tStop);
+      solver2D(int nx, int ny, double dx, double dy, int ghostCells, physics& phys, timeIntegrator& timeIntegrator, double dt, double tStop);
       void run();
       
    private:

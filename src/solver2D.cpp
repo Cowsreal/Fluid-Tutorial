@@ -1,7 +1,7 @@
 #include "solver2D.h"
 
-solver2D::solver2D(int nx, int ny, double dx, double dy, physics& phys, timeIntegrator& timeIntegrator, double dt, double tStop)
-   : m_grid(nx, ny, dx, dy), m_physics(phys), m_timeIntegrator(timeIntegrator), m_dt(dt), m_tStop(tStop)
+solver2D::solver2D(int nx, int ny, double dx, double dy, int ghostCells, physics& phys, timeIntegrator& timeIntegrator, double dt, double tStop)
+   : m_grid(nx, ny, dx, dy, ghostCells), m_physics(phys), m_timeIntegrator(timeIntegrator), m_dt(dt), m_tStop(tStop)
 {
 
 }
