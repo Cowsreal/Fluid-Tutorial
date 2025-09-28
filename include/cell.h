@@ -30,8 +30,25 @@ class cell
       double& varL(int i) {return m_varsL[i];}
       double& varU(int i) {return m_varsU[i];}
       double& varD(int i) {return m_varsD[i];}
-      // 
-      // 
+
+      std::vector<double>& varState(int i)
+      {
+         switch (i)
+         {
+            case 0:
+               return m_vars;
+            case 1:
+               return m_varsU;
+            case 2:
+               return m_varsD;
+            case 3:
+               return m_varsL;
+            case 4:
+               return m_varsR;
+            default:
+            throw std::out_of_range("Invalid index for varState.");
+         }
+      }
 
    private:
       std::vector<double> m_vars;

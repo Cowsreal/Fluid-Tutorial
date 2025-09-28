@@ -13,7 +13,7 @@ class isentropicVortex : public physics
       void initialize(grid2D& grid) override;
       void computeFluxes(grid2D& grid) override;
       void applyBC(grid2D& grid) override;
-      void WENO(grid2D& grid);
+      double HLLC(std::vector<double>& L, std::vector<double>& R);
 
       void consToPrim(grid2D& grid);
       void primToCons(grid2D& grid);
