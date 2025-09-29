@@ -6,9 +6,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(SOURCES 
       src/main.cpp
+      src/cell.cpp
       src/grid2D.cpp
       src/isentropicVortex.cpp
-      src/solver2D.cpp)
+      src/solver2D.cpp
+      src/rungeKutta3.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

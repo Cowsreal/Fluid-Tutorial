@@ -4,6 +4,9 @@
 #include "physics.h"
 
 #include <cmath>
+#include <algorithm>
+#include <fstream>
+#include <vector>
 
 class isentropicVortex : public physics
 {
@@ -11,9 +14,11 @@ class isentropicVortex : public physics
       isentropicVortex(double gamma, double vel1, double vel2, double x0, double y0, double epsilon);
 
       void initialize(grid2D& grid) override;
-      void computeFluxes(grid2D& grid) override;
+      void computeFluxes(grid2D& grid, int nStep, double t) override;
       void applyBC(grid2D& grid) override;
-      double HLLC(std::vector<double>& L, std::vector<double>& R);
+      std::vector<double> HLLC(std::vector<double>& L, std::vector<double>& R, int dir);
+
+      double getGamma(){ return m_gamma; };
 
       void consToPrim(grid2D& grid);
       void primToCons(grid2D& grid);

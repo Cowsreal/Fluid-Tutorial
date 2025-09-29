@@ -5,18 +5,16 @@
 #include "isentropicVortex.h"
 #include "solver2D.h"
 #include "timeIntegrator.h"
-
+#include "rungeKutta3.h"
 
 int main()
 {
    // +4 for WENO5 ghost cells
-   grid2D grid(50, 50, 1 / 50.0, 1 / 50.0, 3);
-
-   std::cout << "hi" << std::endl;
 
    isentropicVortex vort(1.4, 0.0, 0.0, 0.5, 0.5, 10.2);
 
-   std::cout << "hi" << std::endl;
+   rungeKutta3 integrator;
 
-   vort.initialize(grid);
+   solver2D solver(20, 20, 1 / 20.0, 1 / 20.0, 3, vort, integrator, 1.0);
+   solver.run();
 }

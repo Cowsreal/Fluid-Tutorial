@@ -6,12 +6,17 @@
 class cell
 {
    public:
-      cell(){m_vars.resize(4);}
+      cell();
 
       // copy constructor
       cell(const cell& other)
       {
          m_vars = other.m_vars;
+         m_varsR = other.m_varsR;
+         m_varsL = other.m_varsL;
+         m_varsU = other.m_varsU;
+         m_varsD = other.m_varsD;
+         m_flux = other.m_flux;
       }
 
       // Assignment operator
@@ -20,6 +25,11 @@ class cell
          if(this != &other)
          {
             m_vars = other.m_vars;
+            m_varsR = other.m_varsR;
+            m_varsL = other.m_varsL;
+            m_varsU = other.m_varsU;
+            m_varsD = other.m_varsD;
+            m_flux = other.m_flux;
          }
 
          return *this;
@@ -31,24 +41,7 @@ class cell
       double& varU(int i) {return m_varsU[i];}
       double& varD(int i) {return m_varsD[i];}
 
-      std::vector<double>& varState(int i)
-      {
-         switch (i)
-         {
-            case 0:
-               return m_vars;
-            case 1:
-               return m_varsU;
-            case 2:
-               return m_varsD;
-            case 3:
-               return m_varsL;
-            case 4:
-               return m_varsR;
-            default:
-            throw std::out_of_range("Invalid index for varState.");
-         }
-      }
+      std::vector<double>& varState(int i);
 
    private:
       std::vector<double> m_vars;
@@ -57,4 +50,5 @@ class cell
       std::vector<double> m_varsU;
       std::vector<double> m_varsD;
 
+      std::vector<double> m_flux;
 };
