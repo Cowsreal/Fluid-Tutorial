@@ -2,12 +2,12 @@
 
 cell::cell()
 {
-   m_vars.resize(4);
-   m_varsR.resize(4);
-   m_varsL.resize(4);
-   m_varsU.resize(4);
-   m_varsD.resize(4);
-   m_flux.resize(4);
+   m_vars.resize(4, 0.0);
+   m_varsR.resize(4, 0.0);
+   m_varsL.resize(4, 0.0);
+   m_varsU.resize(4, 0.0);
+   m_varsD.resize(4, 0.0);
+   m_flux.resize(4, 0.0);
 }
 
 std::vector<double>& cell::varState(int i)

@@ -26,5 +26,5 @@ class solver2D
       timeIntegrator& m_timeIntegrator;
       double m_dt;
       double m_tStop;
-      double m_c = 0.05;
+      double m_c = 0.2;
 };

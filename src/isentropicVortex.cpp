@@ -37,24 +37,26 @@ isentropicVortex::isentropicVortex(double gamma, double vel1, double vel2, doubl
 
 void isentropicVortex::initialize(grid2D& grid)
 {
+   double beta = 0.2;
    for(int i = 2; i < grid.getNx() - 2; i++)
    {
       double x = (i - 3) * grid.getDx() + grid.getDx() * 0.5;
       for(int j = 2; j < grid.getNy() - 2; j++)
       {
-         cell& currCell = grid.getCell(i, j);
          // get cell center
          double y = (j - 3) * grid.getDy() + grid.getDy() * 0.5;
+         double r2 = ((x - m_x0) * (x - m_x0) + (y - m_y0) * (y - m_y0)) / (beta * beta);
+         double expTerm = exp(1.0 - r2);
 
-         currCell.var(1) = m_vel1 - (x - m_x0) * m_epsilon / (2 * M_PI) * exp(1 - (x - m_x0) * (x - m_x0) - (y - m_y0) * (y - m_y0)); 
-         currCell.var(2) = m_vel2 + (y - m_y0) * m_epsilon / (2 * M_PI) * exp(1 - (x - m_x0) * (x - m_x0) - (y - m_y0) * (y - m_y0)); 
+         cell& c = grid.getCell(i,j);
 
-         // temperature
-         double temp = 1 - (m_gamma - 1) * m_epsilon * m_epsilon / (8 * m_gamma * M_PI * M_PI);
-         temp *= exp(1 - (x - m_x0) * (x - m_x0) - (y - m_y0) * (y - m_y0));
+         // velocity
+         c.var(1) = m_vel1 - (y - m_y0) * m_epsilon / (2.0 * M_PI) * expTerm;
+         c.var(2) = m_vel2 + (x - m_x0) * m_epsilon / (2.0 * M_PI) * expTerm;
 
-         currCell.var(0) = pow(temp, 1 / (m_gamma - 1));
-         currCell.var(3) = currCell.var(0) * temp;
+         double T = 1.0 - (m_gamma - 1) * m_epsilon * m_epsilon / (8.0 * m_gamma * M_PI * M_PI) * expTerm;
+         c.var(0) = pow(T, 1.0 / (m_gamma - 1.0));   // density
+         c.var(3) = pow(c.var(0), m_gamma);       
       }
    }
 
@@ -378,7 +380,7 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
    }
    else if(SL < 0 && 0 <= S)
    {
-      /*
+      
       double scale = rhoL * (SL - uL) / (SL - S);
       // Difference between center (star region) and state
       std::vector<double> UStarL = {
@@ -391,17 +393,19 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
       {
          HLLCFlux[i] = FL[i] + SL * (UStarL[i] - UL[i]);
       }
-      */
+      
       // Difference between center (star region) and state
+      /*
       for(int i = 0; i < 4; i++)
       {
          double add = SL * (pL + rhoL * (SL - uL) * (S - uL) * D[i]);
          HLLCFlux[i] = (S * (SL * UL[i] - FL[i]) + add) / (SL - S);
       }
+      */
    }
    else if(S < 0 && 0 <= SR)
    {
-      /*
+      
       double scale = rhoR * (SR - uR) / (SR - S);
       // Difference between center (star region) and state
       std::vector<double> UStarR = {
@@ -414,12 +418,14 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
       {
          HLLCFlux[i] = FR[i] + SR * (UStarR[i] - UR[i]);
       }
-      */
+      
+      /*
       for(int i = 0; i < 4; i++)
       {
          double add = SR * (pR + rhoR * (SR - uR) * (S - uR) * D[i]);
          HLLCFlux[i] = (S * (SR * UR[i] - FR[i]) + add) / (SR - S);
       }
+      */
    }
    else if(0 >= SR)
    {
