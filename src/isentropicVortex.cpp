@@ -4,13 +4,15 @@
 #include <sstream>
 #include <string>
 
-#define SMALL_VAL 1e-12
+#define SMALL_VAL 1e-6
 
+/*
 void outputData(grid2D& grid, int step, double time)
 {
     std::ostringstream filename;
     filename << "data/density_step" << std::setw(4) << std::setfill('0') << step << ".csv";
 
+   std::cout << "saving data at step " << step << std::endl;
     std::ofstream file(filename.str());
 
     int nx = grid.getNx();
@@ -22,14 +24,14 @@ void outputData(grid2D& grid, int step, double time)
     {
         for (int i = 0; i < nx; i++)
         {
-            double rho = grid.getCell(i, j).varD(0);
+            double rho = grid.getCell(i, j).varState(5)[0];
             file << rho;
             if (i < nx - 1) file << ",";
         }
         file << "\n";
     }
 }
-
+*/
 isentropicVortex::isentropicVortex(double gamma, double vel1, double vel2, double x0, double y0, double epsilon)
    : m_gamma(gamma), m_vel1(vel1), m_vel2(vel2), m_x0(x0), m_y0(y0), m_epsilon(epsilon) {}
 
@@ -80,9 +82,16 @@ void isentropicVortex::computeFluxes(grid2D& grid, int nStep, double t)
 {
    int ghostCells = grid.getGhostCells();
    // TRANSFORM TO CCONSERVATIVE
-   
-   primToCons(grid);
-
+/*   
+   for(int j = 0; j < grid.getNy(); j++)
+   {
+      for(int i = 0; i < grid.getNx(); i++)
+      {
+         std::vector<double>& s = grid.getCell(i, j).varState(0);
+         primToCons(s);
+      }
+   }
+*/
    // STEP 1: WENO RECONSTRUCTION
 
    // COLS 
@@ -206,9 +215,20 @@ void isentropicVortex::computeFluxes(grid2D& grid, int nStep, double t)
       }
    }
 
-   consToPrim(grid);
+   /*
+   for(int j = ghostCells - 1; j < grid.getNy() - ghostCells + 1; j++)
+   {
+      for(int i = ghostCells - 1; i < grid.getNx() - ghostCells + 1; i++)
+      {
+         for(int k = 0; k < 5; k++)
+         {
+            auto& s = grid.getCell(i, j).varState(k);
+            consToPrim(s);
+         }
+      }
+   }
+   */
 
-   outputData(grid, nStep, t);
    // HLLC SOLVER
    
    for(int j = ghostCells; j < grid.getNy() - ghostCells; j++)
@@ -249,14 +269,14 @@ void isentropicVortex::computeFluxes(grid2D& grid, int nStep, double t)
          std::vector<double> verticalDifference(4);
 
          std::transform(
-            c.varState(4).begin(), c.varState(4).end(),
-            c.varState(3).begin(),
+            c.varState(3).begin(), c.varState(3).end(),
+            c.varState(4).begin(),
             hoizontalDifference.begin(),
             [&grid](double a, double b) { return -(b - a) / grid.getDx(); }
          );
          std::transform(
-            c.varState(1).begin(), c.varState(1).end(),
-            c.varState(2).begin(),
+            c.varState(2).begin(), c.varState(2).end(),
+            c.varState(1).begin(),
             verticalDifference.begin(),
             [&grid](double a, double b) { return -(b - a) / grid.getDy(); }
          );        
@@ -268,6 +288,8 @@ void isentropicVortex::computeFluxes(grid2D& grid, int nStep, double t)
          );
       }
    }
+
+   //outputData(grid, nStep, t);
 };
 
 
@@ -279,25 +301,27 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
    double uR;
    double vL;
    double vR;
-
+   // Total energy
+   double eL = L[3];
+   double eR = R[3];
    switch(dir)
    {
       case(0):   
-         uL = L[1];
-         uR = R[1];
-         vL = L[2];
-         vR = R[2];
+         uL = L[1] / rhoL;
+         uR = R[1] / rhoR;
+         vL = L[2] / rhoL;
+         vR = R[2] / rhoR;
          break;
       case(1):   
-         uL = L[2];
-         uR = R[2];
-         vL = L[1];
-         vR = R[1];
+         uL = L[2] / rhoL;
+         uR = R[2] / rhoR;
+         vL = L[1] / rhoL;
+         vR = R[1] / rhoR;
          break;
-
    } 
-   double pL = L[3];
-   double pR = R[3];
+
+   double pL = (m_gamma - 1) * (eL - 0.5 * rhoL * (uL * uL + vL * vL));
+   double pR = (m_gamma - 1) * (eL - 0.5 * rhoL * (uL * uL + vL * vL));
 
    double aL = sqrt(m_gamma * pL / rhoL);
    double aR = sqrt(m_gamma * pR / rhoR);
@@ -331,9 +355,11 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
    double SR = uR + aR * qR;
    double S = (pR - pL + rhoL * uL * (SL - uL) - rhoR * uR * (SR - uR)) / (rhoL * (SL - uL) - rhoR * (SR - uR));
 
+   /*
    // Total energy
    double eL = pL / (m_gamma - 1) + 0.5 * rhoL * (uL * uL + vL * vL);
    double eR = pR / (m_gamma - 1) + 0.5 * rhoR * (uR * uR + vR * vR);
+   */
 
    // UL and UR in the normal directions
    std::vector<double> UL = {rhoL, rhoL * uL, rhoL * vL, eL};
@@ -344,6 +370,7 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
    std::vector<double> FR = {rhoR * uR, rhoR * uR * uR + pR, rhoR * uR * vR, uR * (eR + pR)};
 
    std::vector<double> HLLCFlux(4);
+   std::vector<double> D = {0, 1, 0, S};
 
    if(0 <= SL)
    {
@@ -351,6 +378,7 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
    }
    else if(SL < 0 && 0 <= S)
    {
+      /*
       double scale = rhoL * (SL - uL) / (SL - S);
       // Difference between center (star region) and state
       std::vector<double> UStarL = {
@@ -363,9 +391,17 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
       {
          HLLCFlux[i] = FL[i] + SL * (UStarL[i] - UL[i]);
       }
+      */
+      // Difference between center (star region) and state
+      for(int i = 0; i < 4; i++)
+      {
+         double add = SL * (pL + rhoL * (SL - uL) * (S - uL) * D[i]);
+         HLLCFlux[i] = (S * (SL * UL[i] - FL[i]) + add) / (SL - S);
+      }
    }
    else if(S < 0 && 0 <= SR)
    {
+      /*
       double scale = rhoR * (SR - uR) / (SR - S);
       // Difference between center (star region) and state
       std::vector<double> UStarR = {
@@ -377,6 +413,12 @@ std::vector<double> isentropicVortex::HLLC(std::vector<double>& L, std::vector<d
       for(int i = 0; i < 4; i++)
       {
          HLLCFlux[i] = FR[i] + SR * (UStarR[i] - UR[i]);
+      }
+      */
+      for(int i = 0; i < 4; i++)
+      {
+         double add = SR * (pR + rhoR * (SR - uR) * (S - uR) * D[i]);
+         HLLCFlux[i] = (S * (SR * UR[i] - FR[i]) + add) / (SR - S);
       }
    }
    else if(0 >= SR)
@@ -443,40 +485,25 @@ void isentropicVortex::applyBC(grid2D& grid)
    }
 };
 
-void isentropicVortex::consToPrim(grid2D& grid)
+void isentropicVortex::consToPrim(std::vector<double>& state)
 {
-   for(int i = 0; i < grid.getNx(); i++)
-   {
-      for(int j = 0; j < grid.getNy(); j++)
-      {
-         cell& currCell = grid.getCell(i, j);
 
-         double rho = currCell.var(0);
-         double energy = currCell.var(3);
+   double rho = state[0];
+   double energy = state[3];
 
-         currCell.var(1) /= rho;
-         currCell.var(2) /= rho;
-         currCell.var(3) = (m_gamma - 1) * (energy  - 0.5 * rho * (currCell.var(1) * currCell.var(1) + currCell.var(2) * currCell.var(2)));
-      }
-   }
+   state[1] /= rho;
+   state[2] /= rho;
+   state[3] = (m_gamma - 1) * (energy - 0.5 * rho * (state[1] * state[1] + state[2] * state[2]));
 };
 
-void isentropicVortex::primToCons(grid2D& grid)
+void isentropicVortex::primToCons(std::vector<double>& state)
 {
-   for(int i = 0; i < grid.getNx(); i++)
-   {
-      for(int j = 0; j < grid.getNy(); j++)
-      {
-         cell& currCell = grid.getCell(i, j);
+   double rho = state[0];
+   double pres = state[3];
+   double energy = pres / (m_gamma - 1) + 0.5 * rho * (state[1] * state[1] + state[2] * state[2]);
 
-         double rho = currCell.var(0);
-         double pres = currCell.var(3);
-         double energy = pres / (m_gamma - 1) + 0.5 * rho * (currCell.var(1) * currCell.var(1) + currCell.var(2) * currCell.var(2));
-
-         currCell.var(1) *= rho;
-         currCell.var(2) *= rho;
-         currCell.var(3) = energy;
-      }
-   }
+   state[1] *= rho;
+   state[2] *= rho;
+   state[3] = energy;
 };
 

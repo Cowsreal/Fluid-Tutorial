@@ -2,30 +2,54 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import glob
+import os
 
-# Path to CSV files
-files = sorted(glob.glob("data/density_step*.csv"))
+# Get file lists for each variable
+files_rho = sorted(glob.glob("../data/rho/step*.csv"))
+files_u   = sorted(glob.glob("../data/u/step*.csv"))
+files_v   = sorted(glob.glob("../data/v/step*.csv"))
+files_p   = sorted(glob.glob("../data/pressure/step*.csv"))
 
-# Read the first file to get grid size
-first_file = files[0]
-data = np.loadtxt(first_file, comments='#', delimiter=',')
-ny, nx = data.shape
+nframes = min(len(files_rho), len(files_u), len(files_v), len(files_p))
 
-# Set up the figure
-fig, ax = plt.subplots()
-im = ax.imshow(data, origin='lower', cmap='viridis', interpolation='nearest')
-cbar = fig.colorbar(im)
-cbar.set_label('Density')
+# Load first file to get grid size
+first_file = np.loadtxt(files_rho[0], comments='#', delimiter=',')
+ny, nx = first_file.shape
+
+# Set up figure with 2x2 subplots
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+titles = ["Density (ρ)", "Velocity u", "Velocity v", "Pressure p"]
+
+# Initialize images
+rho = np.loadtxt(files_rho[0], comments='#', delimiter=',')
+u   = np.loadtxt(files_u[0], comments='#', delimiter=',')
+v   = np.loadtxt(files_v[0], comments='#', delimiter=',')
+p   = np.loadtxt(files_p[0], comments='#', delimiter=',')
+
+fields = [rho, u, v, p]
+ims = []
+for ax, title, field in zip(axes.flat, titles, fields):
+    im = ax.imshow(field, origin="lower", cmap="viridis", interpolation="nearest")
+    ax.set_title(title)
+    fig.colorbar(im, ax=ax, shrink=0.7)
+    ims.append(im)
 
 def update(frame):
-    filename = files[frame]
-    data = np.loadtxt(filename, comments='#', delimiter=',')
-    im.set_data(data)
-    ax.set_title(f"Step {frame}, File: {filename}")
-    return [im]
+    rho = np.loadtxt(files_rho[frame], comments='#', delimiter=',')
+    u   = np.loadtxt(files_u[frame], comments='#', delimiter=',')
+    v   = np.loadtxt(files_v[frame], comments='#', delimiter=',')
+    p   = np.loadtxt(files_p[frame], comments='#', delimiter=',')
 
-ani = animation.FuncAnimation(fig, update, frames=len(files), interval=200, blit=True)
+    new_fields = [rho, u, v, p]
+    for im, field in zip(ims, new_fields):
+        im.set_data(field)
 
+    fig.suptitle(f"Step {frame}")
+    return ims
+
+ani = animation.FuncAnimation(fig, update, frames=nframes, interval=200, blit=False)
+
+plt.tight_layout()
 plt.show()
 
-ani.save('density_animation.mp4', fps=5, dpi=150)
+ani.save("flow_fields.mp4", fps=5, dpi=150)

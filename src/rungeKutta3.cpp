@@ -1,11 +1,64 @@
 #include "rungeKutta3.h"
 #include "timeIntegrator.h"
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <string>
+
+
+void outputData(grid2D& grid, int step, double time, int field)
+{
+   std::ostringstream filename;
+   switch(field)
+   {
+      case(0):
+         filename << "data/rho/step" << std::setw(4) << std::setfill('0') << step << ".csv";
+         break;
+      case(1):
+         filename << "data/u/step" << std::setw(4) << std::setfill('0') << step << ".csv";
+         break;
+      case(2):
+         filename << "data/v/step" << std::setw(4) << std::setfill('0') << step << ".csv";
+         break;
+      case(3):
+         filename << "data/pressure/step" << std::setw(4) << std::setfill('0') << step << ".csv";
+         break;
+   }
+
+   std::ofstream file(filename.str());
+
+   int nx = grid.getNx();
+   int ny = grid.getNy();
+
+   file << "# time = " << time << "\n";
+
+   for (int j = 0; j < ny; j++)
+   {
+      for (int i = 0; i < nx; i++)
+      {
+         double rho = grid.getCell(i, j).var(field);
+         file << rho;
+         if (i < nx - 1) file << ",";
+      }
+      file << "\n";
+   }
+}
 
 void rungeKutta3::step(grid2D& grid, physics& physics, double dt, int nStep, double t)
 {
 
+   physics.applyBC(grid);
    // RUNGE KUTTA 3, SHU OSHER SCHEME
    int ghostCells = grid.getGhostCells();
+
+   for(int j = 0; j < grid.getNy(); j++)
+   {
+      for(int i = 0; i < grid.getNx(); i++)
+      {
+         std::vector<double>& s = grid.getCell(i, j).varState(0);
+         physics.primToCons(s);
+      }
+   }
 
    // Stage 1
    grid2D U0 = grid;
@@ -30,8 +83,7 @@ void rungeKutta3::step(grid2D& grid, physics& physics, double dt, int nStep, dou
       }
    }
 
-
-   physics.applyBC(U1);
+   physics.applyBC(F0);
 
    // Stage 2
 
@@ -61,7 +113,7 @@ void rungeKutta3::step(grid2D& grid, physics& physics, double dt, int nStep, dou
 
    // Reset boundary conditions
 
-   physics.applyBC(U1);
+   physics.applyBC(U2);
 
    // Final Stage
 
@@ -92,5 +144,19 @@ void rungeKutta3::step(grid2D& grid, physics& physics, double dt, int nStep, dou
 
    // Reset boundary conditions
 
-   physics.applyBC(U1);
+   physics.applyBC(grid);
+
+   for(int j = 0; j < grid.getNy(); j++)
+   {
+      for(int i = 0; i < grid.getNx(); i++)
+      {
+         std::vector<double>& s = grid.getCell(i, j).varState(0);
+         physics.consToPrim(s);
+      }
+   }
+
+   for(int i = 0; i < 4; i++)
+   {
+      outputData(grid, nStep, t, i);
+   }
 }

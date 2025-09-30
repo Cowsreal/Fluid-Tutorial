@@ -11,10 +11,10 @@ int main()
 {
    // +4 for WENO5 ghost cells
 
-   isentropicVortex vort(1.4, 0.0, 0.0, 0.5, 0.5, 10.2);
+   isentropicVortex vort(1.4, 0.0, 0.0, 0.5, 0.5, 5.0);
 
    rungeKutta3 integrator;
 
-   solver2D solver(20, 20, 1 / 20.0, 1 / 20.0, 3, vort, integrator, 1.0);
+   solver2D solver(100, 100, 1 / 100.0, 1 / 100.0, 3, vort, integrator, 1.0);
    solver.run();
 }

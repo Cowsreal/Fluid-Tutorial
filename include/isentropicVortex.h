@@ -18,10 +18,10 @@ class isentropicVortex : public physics
       void applyBC(grid2D& grid) override;
       std::vector<double> HLLC(std::vector<double>& L, std::vector<double>& R, int dir);
 
-      double getGamma(){ return m_gamma; };
+      double getGamma() override { return m_gamma; } 
 
-      void consToPrim(grid2D& grid);
-      void primToCons(grid2D& grid);
+      void consToPrim(std::vector<double>& s) override;
+      void primToCons(std::vector<double>& s) override;
 
    private:
       double m_gamma;
